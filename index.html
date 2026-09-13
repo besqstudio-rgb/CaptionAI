@@ -1,0 +1,131 @@
+﻿
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CaptionAI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <div class="topbar">
+            <h1>CaptionAI</h1>
+
+            <div id="auth-buttons">
+                <button onclick="mostrarLogin()">Iniciar sesión</button>
+                <button onclick="mostrarRegistro()">Crear cuenta</button>
+            </div>
+        </div>
+
+        <p class="subtitle">Crea contenido que la gente quiera ver.</p>
+
+        <label>¿Qué quieres crear?</label>
+        <input type="text" id="tema" placeholder="Ej: Minecraft PvP">
+
+        <label>Tipo de contenido</label>
+        <select id="tipoContenido">
+            <option>Gaming</option>
+            <option>Entretenimiento</option>
+            <option>Educativo</option>
+            <option>Negocios</option>
+            <option>Curiosidades</option>
+            <option>Storytelling</option>
+            <option>Experimentos</option>
+            <option>Lifestyle</option>
+        </select>
+
+        <label>Público objetivo</label>
+        <select id="publico">
+            <option>Público general</option>
+            <option>Adolescentes</option>
+            <option>Jóvenes</option>
+            <option>Adultos</option>
+            <option>Gamers</option>
+            <option>Principiantes</option>
+        </select>
+
+        <label>Enfoque del vídeo</label>
+        <select id="enfoque">
+            <option>Automático 🧠</option>
+            <option>Viral</option>
+            <option>Curiosidad</option>
+            <option>Historia</option>
+            <option>Reto</option>
+            <option>Educativo</option>
+            <option>Debate</option>
+        </select>
+
+        <label>Plataforma</label>
+        <select id="plataforma">
+            <option>TikTok</option>
+            <option>YouTube Shorts</option>
+            <option>Instagram Reels</option>
+        </select>
+
+        <label>Objetivo del vídeo</label>
+        <select id="objetivo">
+            <option>Conseguir visitas</option>
+            <option>Conseguir seguidores</option>
+            <option>Conseguir interacción</option>
+            <option>Hacer que la gente vea el vídeo completo</option>
+        </select>
+
+        <label>Duración</label>
+        <select id="duracion">
+            <option>15 segundos</option>
+            <option>30 segundos</option>
+            <option>60 segundos</option>
+        </select>
+
+        <label>Estilo</label>
+        <select id="estilo">
+            <option>Divertido</option>
+            <option>Profesional</option>
+            <option>Emocionante</option>
+            <option>Curioso</option>
+        </select>
+
+        <button onclick="generar()">GENERAR 🚀</button>
+
+        <div id="resultado" class="resultado"></div>
+
+        <div class="historial">
+
+            <div class="historial-header">
+                <h2>🕘 Historial</h2>
+
+                <div class="historial-controles">
+
+                    <button class="filtro-historial activo"
+                        onclick="filtrarHistorial('todos', this)">
+                        Todas
+                    </button>
+
+                    <button class="filtro-historial"
+                        onclick="filtrarHistorial('favoritos', this)">
+                        ⭐ Favoritos
+                    </button>
+
+                    <button class="limpiar-historial"
+                        onclick="limpiarHistorial()">
+                        Borrar historial
+                    </button>
+
+                </div>
+            </div>
+
+            <div id="listaHistorial"></div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
+
