@@ -1,4 +1,230 @@
-﻿const formatos = {
+/* ==========================================
+   SISTEMA DE IDIOMAS — CAPTIONAI
+   ========================================== */
+
+let idiomaActual = localStorage.getItem("captionAI_idioma") || "en";
+
+const traducciones = {
+    en: {
+        subtitle: "Create content people want to watch.",
+        whatCreate: "What do you want to create?",
+        topicPlaceholder: "E.g. Minecraft PvP",
+        contentType: "Content type",
+        audience: "Target audience",
+        focus: "Video angle",
+        platform: "Platform",
+        objective: "Video goal",
+        duration: "Duration",
+        style: "Style",
+        generate: "GENERATE 🚀",
+        history: "🕘 History",
+        all: "All",
+        favorites: "⭐ Favorites",
+        clearHistory: "Clear history",
+        login: "Log in",
+        register: "Create account",
+        emptyHistory: "Your history is empty.",
+        copy: "Copy",
+        regenerate: "Generate again",
+        seconds: "seconds",
+        general: "General audience",
+        teens: "Teenagers",
+        youngAdults: "Young adults",
+        adults: "Adults",
+        gamers: "Gamers",
+        beginners: "Beginners",
+        automatic: "Automatic 🧠",
+        viral: "Viral",
+        curiosity: "Curiosity",
+        story: "Story",
+        challenge: "Challenge",
+        educational: "Educational",
+        debate: "Debate",
+        views: "Get views",
+        followers: "Get followers",
+        interaction: "Get engagement",
+        completion: "Make people watch the full video",
+        fun: "Fun",
+        professional: "Professional",
+        exciting: "Exciting",
+        curious: "Curious"
+    },
+
+    es: {
+        subtitle: "Crea contenido que la gente quiera ver.",
+        whatCreate: "¿Qué quieres crear?",
+        topicPlaceholder: "Ej: Minecraft PvP",
+        contentType: "Tipo de contenido",
+        audience: "Público objetivo",
+        focus: "Enfoque del vídeo",
+        platform: "Plataforma",
+        objective: "Objetivo del vídeo",
+        duration: "Duración",
+        style: "Estilo",
+        generate: "GENERAR 🚀",
+        history: "🕘 Historial",
+        all: "Todas",
+        favorites: "⭐ Favoritos",
+        clearHistory: "Borrar historial",
+        login: "Iniciar sesión",
+        register: "Crear cuenta",
+        emptyHistory: "Tu historial está vacío.",
+        copy: "Copiar",
+        regenerate: "Generar de nuevo",
+        seconds: "segundos",
+        general: "Público general",
+        teens: "Adolescentes",
+        youngAdults: "Jóvenes",
+        adults: "Adultos",
+        gamers: "Gamers",
+        beginners: "Principiantes",
+        automatic: "Automático 🧠",
+        viral: "Viral",
+        curiosity: "Curiosidad",
+        story: "Historia",
+        challenge: "Reto",
+        educational: "Educativo",
+        debate: "Debate",
+        views: "Conseguir visitas",
+        followers: "Conseguir seguidores",
+        interaction: "Conseguir interacción",
+        completion: "Hacer que la gente vea el vídeo completo",
+        fun: "Divertido",
+        professional: "Profesional",
+        exciting: "Emocionante",
+        curious: "Curioso"
+    }
+};
+
+function cambiarIdioma(idioma) {
+    idiomaActual = idioma;
+    localStorage.setItem("captionAI_idioma", idioma);
+
+    document.documentElement.lang = idioma;
+
+    const t = traducciones[idioma];
+
+    const textos = {
+        ".subtitle": t.subtitle,
+        "label:nth-of-type(1)": t.whatCreate,
+        "label:nth-of-type(2)": t.contentType,
+        "label:nth-of-type(3)": t.audience,
+        "label:nth-of-type(4)": t.focus,
+        "label:nth-of-type(5)": t.platform,
+        "label:nth-of-type(6)": t.objective,
+        "label:nth-of-type(7)": t.duration,
+        "label:nth-of-type(8)": t.style,
+        "#auth-buttons button:nth-child(1)": t.login,
+        "#auth-buttons button:nth-child(2)": t.register,
+        ".historial-header h2": t.history,
+        ".filtro-historial:nth-child(1)": t.all,
+        ".filtro-historial:nth-child(2)": t.favorites,
+        ".limpiar-historial": t.clearHistory
+    };
+
+    Object.entries(textos).forEach(([selector, texto]) => {
+        const elemento = document.querySelector(selector);
+        if (elemento) elemento.textContent = texto;
+    });
+
+    const tema = document.getElementById("tema");
+    if (tema) tema.placeholder = t.topicPlaceholder;
+
+    const botonGenerar = document.querySelector('button[onclick="generar()"]');
+    if (botonGenerar) botonGenerar.textContent = t.generate;
+
+    traducirOpciones();
+
+    // Si ya existe una generación, la volvemos a renderizar con el mismo
+    // conjunto de decisiones aleatorias, pero en el nuevo idioma.
+    if (window.captionAIHasGeneration) {
+        window.captionAIRerender = true;
+        try {
+            generar();
+        } finally {
+            window.captionAIRerender = false;
+        }
+    }
+}
+
+function traducirOpciones() {
+    const t = traducciones[idiomaActual];
+
+    const opciones = {
+        publico: {
+            "Público general": t.general,
+            "Adolescentes": t.teens,
+            "Jóvenes": t.youngAdults,
+            "Adultos": t.adults,
+            "Gamers": t.gamers,
+            "Principiantes": t.beginners
+        },
+        enfoque: {
+            "Automático 🧠": t.automatic,
+            "Viral": t.viral,
+            "Curiosidad": t.curiosity,
+            "Historia": t.story,
+            "Reto": t.challenge,
+            "Educativo": t.educational,
+            "Debate": t.debate
+        },
+        objetivo: {
+            "Conseguir visitas": t.views,
+            "Conseguir seguidores": t.followers,
+            "Conseguir interacción": t.interaction,
+            "Hacer que la gente vea el vídeo completo": t.completion
+        },
+        duracion: {
+            "15 segundos": `15 ${t.seconds}`,
+            "30 segundos": `30 ${t.seconds}`,
+            "60 segundos": `60 ${t.seconds}`
+        },
+        tipoContenido: {
+            "Gaming": "Gaming",
+            "Entretenimiento": idiomaActual === "en" ? "Entertainment" : "Entretenimiento",
+            "Educativo": idiomaActual === "en" ? "Educational" : "Educativo",
+            "Negocios": idiomaActual === "en" ? "Business" : "Negocios",
+            "Curiosidades": idiomaActual === "en" ? "Curiosities" : "Curiosidades",
+            "Storytelling": "Storytelling",
+            "Experimentos": idiomaActual === "en" ? "Experiments" : "Experimentos",
+            "Lifestyle": "Lifestyle"
+        },
+        estilo: {
+            "Divertido": t.fun,
+            "Profesional": t.professional,
+            "Emocionante": t.exciting,
+            "Curioso": t.curious
+        }
+    };
+
+    Object.entries(opciones).forEach(([id, mapa]) => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        Array.from(select.options).forEach(option => {
+            const valorOriginal = option.dataset.captionaiValue || option.value;
+            option.dataset.captionaiValue = valorOriginal;
+            if (mapa[valorOriginal]) {
+                option.textContent = mapa[valorOriginal];
+            }
+
+            // El texto visible puede estar traducido, pero el generador
+            // siempre debe recibir el valor interno original.
+            option.value = valorOriginal;
+        });
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const selector = document.getElementById("selectorIdioma");
+
+    if (selector) {
+        selector.value = idiomaActual;
+    }
+
+    cambiarIdioma(idiomaActual);
+});
+const formatos = {
     Gaming: ["Reto", "Experimento", "Comparación", "Ranking", "Historia"],
     Entretenimiento: ["Reto", "Experimento", "Pregunta", "Ranking", "Historia"],
     Educativo: ["Pregunta", "Lista", "Comparación", "Descubrimiento", "Historia"],
@@ -1437,6 +1663,202 @@ function obtenerMejoraHTML(idea, analisis, index) {
     `;
 }
 
+
+/* ==========================================
+   GENERACIÓN MULTIIDIOMA
+   Los valores internos siguen en español para no romper la lógica.
+   Solo cambia el texto que se genera al usuario.
+   ========================================== */
+
+const estructurasEN = {
+    Reto: [
+        tema => `Try to achieve a specific goal related to ${tema}, but with a rule that makes the challenge much harder.`,
+        tema => `Complete a challenge related to ${tema} before time runs out.`,
+        tema => `Try to beat ${tema} with only one chance to succeed.`,
+        tema => `Put your ${tema} skills to the test while the difficulty increases progressively.`
+    ],
+    Experimento: [
+        tema => `Test what happens when ${tema} is pushed to the limit and discover the result.`,
+        tema => `Experiment with ${tema} under an unexpected condition and see what happens.`,
+        tema => `Put ${tema} to the test and find out whether it really works as expected.`,
+        tema => `Change one condition of ${tema} and see how it affects the result.`
+    ],
+    Comparación: [
+        tema => `Compare different options related to ${tema} and discover which one gets the best result.`,
+        tema => `Put two ${tema} alternatives against each other to find out which works better.`,
+        tema => `Test the main ${tema} options and determine which one wins.`,
+        tema => `Which is actually the best option when it comes to ${tema}?`
+    ],
+    Ranking: [
+        tema => `Rank several options related to ${tema} from worst to best.`,
+        tema => `Create a ranking of the most interesting ${tema} options.`,
+        tema => `Rank different elements of ${tema} and discover which one takes first place.`,
+        tema => `What is the best ${tema} option? Rank them all from worst to best.`
+    ],
+    Historia: [
+        tema => `Tell a story related to ${tema}, starting with the problem and ending with the result.`,
+        tema => `Find out what happens when you face ${tema} and follow the entire process to the end.`,
+        tema => `Start with an unexpected situation related to ${tema} and discover how it ends.`,
+        tema => `Experience something related to ${tema} and show how the situation changes until the end.`
+    ],
+    Pregunta: [
+        tema => `What really happens when you try ${tema}?`,
+        tema => `What is the best way to deal with ${tema}?`,
+        tema => `What would happen if we pushed ${tema} to the limit?`,
+        tema => `Does ${tema} really work the way everyone thinks?`
+    ],
+    Lista: [
+        tema => `Discover the most interesting options related to ${tema}.`,
+        tema => `Here are some of the best options related to ${tema}.`,
+        tema => `Discover the ${tema} elements that are most worth knowing about.`,
+        tema => `A list of the most notable options related to ${tema}.`
+    ],
+    Descubrimiento: [
+        tema => `Discover something unexpected about ${tema} and find out why it happens.`,
+        tema => `Investigate ${tema} and discover something you probably did not expect to find.`,
+        tema => `Explore ${tema} until you find the most surprising result.`,
+        tema => `Discover what is really behind ${tema}.`
+    ]
+};
+
+const hooksEN = {
+    Gaming: [
+        tema => `Today I am putting ${tema} to the test in a way that could go very wrong.`,
+        tema => `I thought ${tema} would be easy, but there is a problem.`,
+        tema => `I only have one chance to pull this off with ${tema}.`,
+        tema => `Can I actually beat this ${tema} challenge?`
+    ],
+    Entretenimiento: [
+        tema => `Today we are finding out what happens when ${tema}.`,
+        tema => `This seemed like a good idea until we started with ${tema}.`,
+        tema => `I did not expect ${tema} to end like this.`,
+        tema => `What would happen if we pushed ${tema} to the limit?`
+    ],
+    Educativo: [
+        tema => `Today you are going to discover something important about ${tema}.`,
+        tema => `If you want to understand ${tema}, start here.`,
+        tema => `Most people misunderstand ${tema}.`,
+        tema => `In just a few minutes, you will understand how ${tema} works.`
+    ],
+    Negocios: [
+        tema => `There is something important you need to know about ${tema}.`,
+        tema => `Before you try ${tema}, you need to know this.`,
+        tema => `Does ${tema} actually work?`,
+        tema => `Let us find out what really happens with ${tema}.`
+    ],
+    Curiosidades: [
+        tema => `There is something about ${tema} you probably did not know.`,
+        tema => `Did you know ${tema} can work very differently from what it seems?`,
+        tema => `Today we are discovering what is really behind ${tema}.`,
+        tema => `The answer about ${tema} is more surprising than it seems.`
+    ],
+    Storytelling: [
+        tema => `It all started when I decided to take on ${tema}.`,
+        tema => `I had no idea how this ${tema} story would end.`,
+        tema => `At first it seemed simple, but ${tema} changed everything.`,
+        tema => `This story started with a decision involving ${tema}.`
+    ],
+    Experimentos: [
+        tema => `Today we are finding out what really happens with ${tema}.`,
+        tema => `What happens if we push ${tema} to the limit?`,
+        tema => `I am putting ${tema} to the test to find the answer.`,
+        tema => `We have a theory about ${tema}. Now it is time to test it.`
+    ],
+    Lifestyle: [
+        tema => `Today I am trying something different with ${tema}.`,
+        tema => `I did not know if this would work, but I decided to try ${tema}.`,
+        tema => `Let us find out what happens when you try ${tema}.`,
+        tema => `This experience with ${tema} turned out very differently than expected.`
+    ]
+};
+
+const titulosEN = {
+    Gaming: [
+        tema => `The hardest ${tema} challenge`,
+        tema => `Can I actually do it with ${tema}?`,
+        tema => `Testing ${tema} to the limit`,
+        tema => `The best way to ${tema}`,
+        tema => `This completely changed ${tema}`
+    ],
+    Entretenimiento: [
+        tema => `What happens if we do this with ${tema}?`,
+        tema => `I did not expect this result with ${tema}`,
+        tema => `Testing ${tema} to the limit`,
+        tema => `The result was unexpected`,
+        tema => `This went completely differently`
+    ],
+    Educativo: [
+        tema => `How to understand ${tema}`,
+        tema => `The truth about ${tema}`,
+        tema => `Everything you need to know about ${tema}`,
+        tema => `${tema} explained simply`,
+        tema => `The mistake everyone makes with ${tema}`
+    ],
+    Negocios: [
+        tema => `Does ${tema} actually work?`,
+        tema => `The truth about ${tema}`,
+        tema => `What you need to know about ${tema}`,
+        tema => `Before you try ${tema}, watch this`,
+        tema => `The mistake you should avoid with ${tema}`
+    ],
+    Curiosidades: [
+        tema => `The ${tema} fact almost nobody knows`,
+        tema => `The most surprising thing about ${tema}`,
+        tema => `Did you know this about ${tema}?`,
+        tema => `The truth behind ${tema}`,
+        tema => `This is stranger than it looks`
+    ],
+    Storytelling: [
+        tema => `The story that started with ${tema}`,
+        tema => `I did not expect this story to end like this`,
+        tema => `Everything changed because of ${tema}`,
+        tema => `The full story of ${tema}`,
+        tema => `This is how it all started`
+    ],
+    Experimentos: [
+        tema => `What happens if we push ${tema} to the limit?`,
+        tema => `Putting ${tema} to the test`,
+        tema => `The ${tema} experiment`,
+        tema => `I tested ${tema} to find out the truth`,
+        tema => `The result was unexpected`
+    ],
+    Lifestyle: [
+        tema => `Trying ${tema} for the first time`,
+        tema => `My experience with ${tema}`,
+        tema => `Is ${tema} actually worth it?`,
+        tema => `What happened when I tried ${tema}`,
+        tema => `This did not go as expected`
+    ]
+};
+
+const enfoquesEN = {
+    Viral: "Prioritize an idea that creates immediate interest, starts strong and is easy to consume.",
+    Curiosidad: "Prioritize questions, unexpected information and elements that make viewers want to discover the answer.",
+    Historia: "Build the content around a clear progression: beginning, problem, development and result.",
+    Reto: "Turn the topic into a challenge with difficulty, a clear goal and a result to discover at the end.",
+    Educativo: "Prioritize clarity, learning and simple explanations that provide value to the viewer.",
+    Debate: "Present a question that can create different opinions and arguments that invite participation."
+};
+
+const estrategiaEnfoqueEN = {
+    Viral: { hook: "make the opening direct, strong and easy to understand", titulo: "use a clear promise that creates immediate interest" },
+    Curiosidad: { hook: "create an unanswered question the viewer wants to solve", titulo: "leave an open question that creates curiosity" },
+    Historia: { hook: "quickly present the initial problem or situation", titulo: "build a story with progression and a result" },
+    Reto: { hook: "immediately present the challenge and what is at stake", titulo: "make the goal of the challenge clear" },
+    Educativo: { hook: "promise to explain or demonstrate something useful quickly", titulo: "make it clear what the viewer will learn" },
+    Debate: { hook: "raise a question that can divide opinions", titulo: "clearly present the dilemma or comparison" }
+};
+
+const perfilesPublicoEN = {
+    Gamers: "Use references and situations from gaming while keeping a dynamic pace.",
+    Principiantes: "Explain concepts simply and do not assume prior knowledge.",
+    Adolescentes: "Keep the tone dynamic, direct and entertaining without unnecessarily long explanations.",
+    Jóvenes: "Use natural, direct language that is easy to consume.",
+    Adultos: "Prioritize clarity, usefulness and a structured explanation.",
+    Creadores: "Focus on practical ideas, results and elements that can improve content.",
+    "Público general": "Make the idea easy to understand even for someone unfamiliar with the topic."
+};
+
 function generar() {
     const tema = document.getElementById("tema").value.trim();
     const tipo = document.getElementById("tipoContenido").value;
@@ -1466,7 +1888,7 @@ function generar() {
     if (!tema) {
         resultado.innerHTML = `
             <div class="error">
-                Escribe primero un tema para generar contenido.
+                ${idiomaActual === "en" ? "Enter a topic first to generate content." : "Escribe primero un tema para generar contenido."}
             </div>
         `;
         return;
@@ -1475,15 +1897,23 @@ function generar() {
     const formatosPreferidos = formatosPorEnfoque[enfoque] || formatos[tipo];
     const formatosDisponibles = formatos[tipo].filter(f => formatosPreferidos.includes(f));
     const formato = elegir(formatosDisponibles.length ? formatosDisponibles : formatos[tipo]);
-    const instruccionEnfoque = enfoques[enfoque] || "";
-    const estrategia = estrategiaEnfoque[enfoque] || {
+    const generacionEN = idiomaActual === "en";
+    const estructurasActivas = generacionEN ? estructurasEN : estructuras;
+    const hooksActivos = generacionEN ? hooksEN : hooks;
+    const titulosActivos = generacionEN ? titulosEN : titulos;
+    const instruccionEnfoque = (generacionEN ? enfoquesEN : enfoques)[enfoque] || "";
+    const estrategia = (generacionEN ? estrategiaEnfoqueEN : estrategiaEnfoque)[enfoque] || {
         hook: "haz que el inicio sea interesante",
         titulo: "haz que el título sea claro y atractivo"
     };
-    const perfil = perfilesPublico[publico];
-    const ajuste = ajustesPublico[publico];
+    const perfil = (generacionEN ? perfilesPublicoEN : perfilesPublico)[publico] || "";
+    const ajuste = ajustesPublico[publico] || {
+        idea: texto => texto,
+        hook: texto => texto,
+        titulo: texto => texto
+    };
 
-    const ideas = mezclar(estructuras[formato])
+    const ideas = mezclar(estructurasActivas[formato])
         .slice(0, 3)
         .map(funcion => limpiarIdea(ajuste.idea(funcion(tema) + " " + instruccionEnfoque)));
 
@@ -1505,19 +1935,50 @@ function generar() {
     const mejorIdea = ideas[mejorIdeaIndex];
     const mejorPuntuacion = analisisIdeas[mejorIdeaIndex].puntuacion;
 
-    const hooksGenerados = mezclar(hooks[tipo])
+    const hooksGenerados = mezclar(hooksActivos[tipo])
         .slice(0, 3)
         .map(funcion => ajuste.hook(funcion(tema) + " " + instruccionEnfoque + " " + estrategia.hook));
 
-    const titulosGenerados = mezclar(titulos[tipo])
+    const titulosGenerados = mezclar(titulosActivos[tipo])
         .slice(0, 5)
         .map(funcion => ajuste.titulo(funcion(tema) + " " + instruccionEnfoque + " " + estrategia.titulo));
 
-    const hookPrincipal = ajuste.hook(elegir(hooks[tipo])(tema + " " + instruccionEnfoque + " " + estrategia.hook));
-    const estructuraPrincipal = ajuste.idea(elegir(estructuras[formato])(tema + " " + instruccionEnfoque + " " + estrategia.titulo));
+    const hookPrincipal = ajuste.hook(elegir(hooksActivos[tipo])(tema + " " + instruccionEnfoque + " " + estrategia.hook));
+    const estructuraPrincipal = ajuste.idea(elegir(estructurasActivas[formato])(tema + " " + instruccionEnfoque + " " + estrategia.titulo));
 
-    const guion =
-`HOOK:
+    const guion = generacionEN
+        ? `HOOK:
+"${hookPrincipal}"
+
+INTRODUCTION:
+Quickly introduce ${tema} and make it clear what the viewer will discover or achieve.
+
+AUDIENCE:
+${publico}
+
+ADAPTATION:
+${perfil}
+
+FORMAT:
+${formato}
+
+DEVELOPMENT:
+${estructuraPrincipal}
+
+Keep a ${estilo.toLowerCase()} pace and adapt the explanation to the selected audience.
+
+KEY MOMENT:
+Take the video to its most interesting point and reveal the information, test or result the viewer has been waiting for.
+
+ENDING:
+Clearly show the result and explain what you discovered.
+
+CALL TO ACTION:
+Finish by focusing on ${objetivo.toLowerCase()}.
+
+DURATION:
+Adapt the pace to approximately ${duracion}.`
+        : `HOOK:
 "${hookPrincipal}"
 
 INTRODUCCIÓN:
@@ -1553,10 +2014,10 @@ Adapta el ritmo para aproximadamente ${duracion}.`;
         `#${limpiarHashtag(tema)}`,
         `#${limpiarHashtag(tipo)}`,
         `#${limpiarHashtag(plataforma)}`,
-        "#contenido",
-        "#creadores",
+        generacionEN ? "#content" : "#contenido",
+        generacionEN ? "#creators" : "#creadores",
         "#viral",
-        "#ideas"
+        generacionEN ? "#ideas" : "#ideas"
     ].join(" ");
 
     const textoIdeas = ideas
@@ -1568,46 +2029,46 @@ Adapta el ritmo para aproximadamente ${duracion}.`;
         .join("\n\n");
 
     const textoTitulos = titulosGenerados
-        .map((titulo, index) => `TÍTULO ${index + 1}\n${titulo}`)
+        .map((titulo, index) => `${generacionEN ? "TITLE" : "TÍTULO"} ${index + 1}\n${titulo}`)
         .join("\n\n");
 
     resultado.innerHTML = `
         <div class="resultado-header">
-            <h2>✨ Tu contenido</h2>
+            <h2>✨ ${generacionEN ? "Your content" : "Tu contenido"}</h2>
             <span>${plataforma} · ${tipo}</span>
         </div>
 
         <div class="resultado-card">
             <div class="card-top">
-                <h3>💡 3 IDEAS · ${formato}</h3>
+                <h3>💡 3 ${generacionEN ? "IDEAS" : "IDEAS"} · ${formato}</h3>
                 ${botonCopiar(textoIdeas)}
             </div>
 
             ${ideas.map((idea, index) => `
                 <div class="opcion">
-                    <strong class="${index === mejorIdeaIndex ? "mejor-idea-titulo" : ""}">${index === mejorIdeaIndex ? "🏆 MEJOR IDEA" : "Idea " + (index + 1)}</strong>
+                    <strong class="${index === mejorIdeaIndex ? "mejor-idea-titulo" : ""}">${index === mejorIdeaIndex ? generacionEN ? "🏆 BEST IDEA" : "🏆 MEJOR IDEA" : "Idea " + (index + 1)}</strong>
                     <p>${idea}</p>
-                    <small class="puntuacion-idea">⭐ Potencial: ${puntuacionesIdeas[index]}/100</small>
+                    <small class="puntuacion-idea">⭐ ${generacionEN ? "Potential" : "Potencial"}: ${puntuacionesIdeas[index]}/100</small>
 
                     <div class="analisis-idea">
                         <span>⚡ Hook: ${analisisIdeas[index].hook}</span>
-                        <span>👀 Curiosidad: ${analisisIdeas[index].curiosidad}</span>
-                        <span>💬 Interacción: ${analisisIdeas[index].interaccion}</span>
-                        <span>🎯 Público: ${analisisIdeas[index].publico}</span>
-                        <span>📱 Plataforma: ${analisisIdeas[index].plataforma}</span>
-                        <span>🔥 Enfoque: ${analisisIdeas[index].enfoque}</span>
+                        <span>👀 ${generacionEN ? "Curiosity" : "Curiosidad"}: ${analisisIdeas[index].curiosidad}</span>
+                        <span>💬 ${generacionEN ? "Engagement" : "Interacción"}: ${analisisIdeas[index].interaccion}</span>
+                        <span>🎯 ${generacionEN ? "Audience" : "Público"}: ${analisisIdeas[index].publico}</span>
+                        <span>📱 ${generacionEN ? "Platform" : "Plataforma"}: ${analisisIdeas[index].plataforma}</span>
+                        <span>🔥 ${generacionEN ? "Angle" : "Enfoque"}: ${analisisIdeas[index].enfoque}</span>
                     </div>
 
                     ${obtenerMejoraHTML(idea, analisisIdeas[index], index)}
 
                     <div class="recomendacion-idea">
-                        <p>🟢 <strong>Fortaleza:</strong> ${
+                        <p>🟢 <strong>${generacionEN ? "Strength" : "Fortaleza"}:</strong> ${
                             analisisIdeas[index].curiosidad >= analisisIdeas[index].hook
-                                ? "Tiene un buen potencial para generar curiosidad."
-                                : "Tiene un hook fuerte capaz de captar atención."
+                                ? generacionEN ? "It has strong potential to create curiosity." : "Tiene un buen potencial para generar curiosidad."
+                                : generacionEN ? "It has a strong hook capable of grabbing attention." : "Tiene un hook fuerte capaz de captar atención."
                         }</p>
 
-                        <p>🔴 <strong>Debilidad:</strong> ${
+                        <p>🔴 <strong>${generacionEN ? "Weakness" : "Debilidad"}:</strong> ${
                             Math.min(
                                 analisisIdeas[index].hook,
                                 analisisIdeas[index].curiosidad,
@@ -1616,24 +2077,24 @@ Adapta el ritmo para aproximadamente ${duracion}.`;
                                 analisisIdeas[index].plataforma,
                                 analisisIdeas[index].enfoque
                             ) < 55
-                                ? "Hay un aspecto importante que limita su potencial."
-                                : "Todavía puede ganar fuerza en interacción o diferenciación."
+                                ? generacionEN ? "An important aspect is limiting its potential." : "Hay un aspecto importante que limita su potencial."
+                                : generacionEN ? "It can still become stronger in engagement or differentiation." : "Todavía puede ganar fuerza en interacción o diferenciación."
                         }</p>
 
-                        <p>💡 <strong>Mejora:</strong> ${
+                        <p>💡 <strong>${generacionEN ? "Improvement" : "Mejora"}:</strong> ${
                             analisisIdeas[index].interaccion < 60
-                                ? "Añade una decisión, conflicto o elemento que invite al espectador a participar."
+                                ? generacionEN ? "Add a decision, conflict or element that invites viewers to participate." : "Añade una decisión, conflicto o elemento que invite al espectador a participar."
                                 : analisisIdeas[index].curiosidad < 70
-                                    ? "Introduce una incógnita más clara que haga querer descubrir el resultado."
-                                    : "Haz que el resultado o las consecuencias sean todavía más importantes."
+                                    ? generacionEN ? "Introduce a clearer unknown that makes viewers want to discover the result." : "Introduce una incógnita más clara que haga querer descubrir el resultado."
+                                    : generacionEN ? "Make the result or consequences even more important." : "Haz que el resultado o las consecuencias sean todavía más importantes."
                         }</p>
 
-                        <p>🎯 <strong>Veredicto:</strong> ${
+                        <p>🎯 <strong>${generacionEN ? "Assessment" : "Veredicto"}:</strong> ${
                             analisisIdeas[index].puntuacion >= 75
-                                ? "Idea muy sólida con potencial alto."
+                                ? generacionEN ? "Very solid idea with high potential." : "Idea muy sólida con potencial alto."
                                 : analisisIdeas[index].puntuacion >= 60
-                                    ? "Buena base, pero necesita un pequeño giro para destacar."
-                                    : "Concepto interesante, aunque necesita una mejora importante."
+                                    ? generacionEN ? "Good foundation, but it needs a small twist to stand out." : "Buena base, pero necesita un pequeño giro para destacar."
+                                    : generacionEN ? "Interesting concept, although it needs a significant improvement." : "Concepto interesante, aunque necesita una mejora importante."
                         }</p>
                     </div>
                 </div>
@@ -1656,7 +2117,7 @@ Adapta el ritmo para aproximadamente ${duracion}.`;
 
         <div class="resultado-card">
             <div class="card-top">
-                <h3>📝 GUION COMPLETO</h3>
+                <h3>📝 ${generacionEN ? "FULL SCRIPT" : "GUION COMPLETO"}</h3>
                 ${botonCopiar(guion)}
             </div>
 
@@ -1665,13 +2126,13 @@ Adapta el ritmo para aproximadamente ${duracion}.`;
 
         <div class="resultado-card">
             <div class="card-top">
-                <h3>🏷️ 5 TÍTULOS</h3>
+                <h3>🏷️ 5 ${generacionEN ? "TITLES" : "TÍTULOS"}</h3>
                 ${botonCopiar(textoTitulos)}
             </div>
 
             ${titulosGenerados.map((titulo, index) => `
                 <div class="opcion">
-                    <strong>Título ${index + 1}</strong>
+                    <strong>${generacionEN ? "Title" : "Título"} ${index + 1}</strong>
                     <p>${titulo}</p>
                 </div>
             `).join("")}
@@ -1687,7 +2148,7 @@ Adapta el ritmo para aproximadamente ${duracion}.`;
         </div>
 
         <button class="regenerar" onclick="generar()">
-            🔄 Generar nuevas opciones
+            🔄 ${generacionEN ? "Generate new options" : "Generar nuevas opciones"}
         </button>
     `;
 }
@@ -1729,14 +2190,65 @@ async function copiarTexto(texto, boton) {
 
 const generarOriginal = generar;
 
+/* ==========================================
+   RENDERIZADO MULTIIDIOMA SIN CAMBIAR LA IDEA
+   ========================================== */
+
 generar = function() {
-    generarOriginal();
+    const mathRandomOriginal = Math.random;
+
+    // Cada generación recibe una semilla propia. Al cambiar de idioma
+    // reutilizamos esa semilla para obtener exactamente las mismas
+    // decisiones de estructura/hook/título, cambiando solo el idioma.
+    if (!window.captionAIRenderSeed || !window.captionAIRerender) {
+        window.captionAIRenderSeed = Math.floor(mathRandomOriginal() * 4294967296) >>> 0;
+    }
+
+    let seed = window.captionAIRenderSeed >>> 0;
+
+    Math.random = function() {
+        seed = (1664525 * seed + 1013904223) >>> 0;
+        return seed / 4294967296;
+    };
+
+    try {
+        generarOriginal();
+    } finally {
+        Math.random = mathRandomOriginal;
+    }
 
     const tema = document.getElementById("tema").value.trim();
     const resultado = document.getElementById("resultado");
 
     if (!tema || resultado.querySelector(".error")) {
         return;
+    }
+
+    window.captionAIHasGeneration = true;
+
+    let historial = JSON.parse(
+        localStorage.getItem("captionAI_historial") || "[]"
+    );
+
+    if (window.captionAIRerender && window.captionAIHistoryId) {
+        // Actualizar la misma entrada: no creamos duplicados al cambiar idioma.
+        const entradaExistente = historial.find(
+            entrada => entrada.id === window.captionAIHistoryId
+        );
+
+        if (entradaExistente) {
+            entradaExistente.contenido = resultado.innerHTML;
+            entradaExistente.idioma = idiomaActual;
+            entradaExistente.seed = window.captionAIRenderSeed;
+
+            localStorage.setItem(
+                "captionAI_historial",
+                JSON.stringify(historial)
+            );
+
+            mostrarHistorial();
+            return;
+        }
     }
 
     const entrada = {
@@ -1746,16 +2258,20 @@ generar = function() {
         publico: document.getElementById("publico").value,
         plataforma: document.getElementById("plataforma").value,
         fecha: new Date().toLocaleString("es-ES"),
+        idioma: idiomaActual,
+        seed: window.captionAIRenderSeed,
         contenido: resultado.innerHTML
     };
 
-    let historial = JSON.parse(localStorage.getItem("captionAI_historial") || "[]");
+    window.captionAIHistoryId = entrada.id;
 
     historial.unshift(entrada);
-
     historial = historial.slice(0, 10);
 
-    localStorage.setItem("captionAI_historial", JSON.stringify(historial));
+    localStorage.setItem(
+        "captionAI_historial",
+        JSON.stringify(historial)
+    );
 
     mostrarHistorial();
 };
@@ -1822,7 +2338,25 @@ function abrirHistorial(id) {
     document.getElementById("publico").value = entrada.publico;
     document.getElementById("plataforma").value = entrada.plataforma;
 
-    document.getElementById("resultado").innerHTML = entrada.contenido;
+    // Las entradas nuevas guardan la semilla. Esto permite abrirlas
+    // directamente en el idioma seleccionado sin perder la generación.
+    if (entrada.seed !== undefined && entrada.seed !== null) {
+        window.captionAIRenderSeed = Number(entrada.seed) >>> 0;
+        window.captionAIHistoryId = entrada.id;
+        window.captionAIHasGeneration = true;
+        window.captionAIRerender = true;
+
+        try {
+            generar();
+        } finally {
+            window.captionAIRerender = false;
+        }
+    } else {
+        // Compatibilidad con generaciones antiguas que no tenían semilla.
+        document.getElementById("resultado").innerHTML = entrada.contenido;
+        window.captionAIHistoryId = entrada.id;
+        window.captionAIHasGeneration = true;
+    }
 
     window.scrollTo({
         top: document.getElementById("resultado").offsetTop - 30,
